@@ -46,9 +46,9 @@ def test_function(msg: func.QueueMessage, outputQueueItem: func.Out[str]) -> Non
     outputQueueItem.set('hello')
 
 
-@app.function_name(name="ServiceBusFunc")
+@app.function_name(name="ServiceBusTopicFunc")
 @app.on_service_bus_topic_change(arg_name="serbustopictrigger", topic_name="testtopic", connection="topicConnectionString", subscription_name="testsub") # service bus topic trigger
-@app.write_service_bus_topic(arg_name="serbustopicbinding", connection="topicConnectionString",  topic_name="testtopic", subscription_name="testsub") # service bus topic output binding 
+@app.write_service_bus_topic(arg_name="serbustopicbinding", connection="outputtopicConnectionString",  topic_name="outputtopic", subscription_name="testsub") # service bus topic output binding 
 def main(serbustopictrigger: func.ServiceBusMessage, serbustopicbinding: func.Out[str]) -> None:
     logging.info('Python ServiceBus queue trigger processed message.')
 
@@ -70,7 +70,7 @@ def main(serbustopictrigger: func.ServiceBusMessage, serbustopicbinding: func.Ou
     serbustopicbinding.set("topic works!!")
 
 
-@app.function_name(name="ServiceBusFunc")
+@app.function_name(name="ServiceBusQueueFunc")
 @app.on_service_bus_queue_change(arg_name="serbustopictrigger", queue_name="inputqueue", connection="queueConnectionString") # service bus queue trigger
 @app.write_service_bus_queue(arg_name="serbustopicbinding", connection="queueConnectionString",  queue_name="outputqueue")  # service bus queue output binding 
 def main(serbustopictrigger: func.ServiceBusMessage, serbustopicbinding: func.Out[str]) -> None:
