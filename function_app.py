@@ -4,7 +4,7 @@ import datetime
 import logging
 import os
 
-app = func.FunctionsApp()
+app = func.FunctionApp(auth_level = func.AuthLevel.ANONYMOUS)
 
 @app.function_name(name="HttpTrigger1")
 @app.route(route="hello") # HTTP Trigger
@@ -105,3 +105,15 @@ def main(triggerDocs: func.DocumentList, inDocs: func.DocumentList, outDoc: func
         logging.info(inDocs[0]['text'])
         triggerDoc['ssss'] = 'Hello updated2!'
         outDoc.set(triggerDoc)
+     
+     
+@app.function_name(name="BlobFunc")
+@app.on_blob_change(arg_name="triggerBlob", path="input-container/{name}", connection="AzureWebJobsStorage")
+@app.write_blob(arg_name="outputBlob", path="output-container/{name}", connection="AzureWebJobsStorage")
+@app.read_blob(arg_name="readBlob", path="output-container/{name}", connection="AzureWebJobsStorage")
+def test_function(triggerBlob: func.InputStream , readBlob : func.InputStream, outputBlob: func.Out[str]) -> None:
+    logging.info(f"Blob trigger executed!")
+    logging.info(f"Blob Name: {triggerBlob.name} ({triggerBlob.length}) bytes")
+    logging.info(f"Full Blob URI: {triggerBlob.uri}")
+    outputBlob.set('hello')
+    logging.info(f"Output blob: {readBlob.read()}")
