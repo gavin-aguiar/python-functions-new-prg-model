@@ -138,12 +138,6 @@ def test_function(triggerBlob: func.InputStream , readBlob : func.InputStream, o
 
 
 
-
-
-
-
-
-
 # To run asgi app using new prog model python function, please uncomment below section and comment out rest of file
 # import fastapi
 # import json
