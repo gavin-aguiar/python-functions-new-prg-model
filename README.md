@@ -9,7 +9,7 @@ import datetime
 import logging
 import os
 
-app = func.FunctionsApp()
+app = func.FunctionApp()
 
 @app.function_name(name="HttpTrigger1")
 @app.route(route="hello") # HTTP Trigger
