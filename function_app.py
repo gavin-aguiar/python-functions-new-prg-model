@@ -38,7 +38,7 @@ def eventhub_trigger(myhub: func.EventHubEvent, outputhub: func.Out[str]):
 
 
 @app.function_name(name="QueueFunc")
-@app.on_queue_change(arg_name="msg", queue_name="js-queue-items", connection="storageAccountConnectionString") # Queue trigger
+@app.on_queue_change(arg_name="msg", queue_name="inputqueue", connection="storageAccountConnectionString") # Queue trigger
 @app.write_queue(arg_name="outputQueueItem", queue_name="outqueue", connection="storageAccountConnectionString") # Queue output binding
 def test_function(msg: func.QueueMessage, outputQueueItem: func.Out[str]) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
@@ -47,7 +47,7 @@ def test_function(msg: func.QueueMessage, outputQueueItem: func.Out[str]) -> Non
 
 
 @app.function_name(name="ServiceBusTopicFunc")
-@app.on_service_bus_topic_change(arg_name="serbustopictrigger", topic_name="testtopic", connection="topicConnectionString", subscription_name="testsub") # service bus topic trigger
+@app.on_service_bus_topic_change(arg_name="serbustopictrigger", topic_name="inputtopic", connection="topicConnectionString", subscription_name="testsub") # service bus topic trigger
 @app.write_service_bus_topic(arg_name="serbustopicbinding", connection="outputtopicConnectionString",  topic_name="outputtopic", subscription_name="testsub") # service bus topic output binding 
 def main(serbustopictrigger: func.ServiceBusMessage, serbustopicbinding: func.Out[str]) -> None:
     logging.info('Python ServiceBus queue trigger processed message.')
