@@ -31,8 +31,8 @@ def timer_function(dummy: func.TimerRequest) -> None:
 
 
 @app.function_name(name="EventHubFunc")
-@app.on_event_hub_message(arg_name="myhub", event_hub_name="testhub", connection="EHConnectionString") # Eventhub trigger
-@app.write_event_hub_message(arg_name="outputhub", event_hub_name="testhub", connection="EHConnectionString") # Eventhub output binding
+@app.on_event_hub_message(arg_name="myhub", event_hub_name="inputhub", connection="EHConnectionString") # Eventhub trigger
+@app.write_event_hub_message(arg_name="outputhub", event_hub_name="outputhub", connection="EHConnectionString") # Eventhub output binding
 def eventhub_trigger(myhub: func.EventHubEvent, outputhub: func.Out[str]):
     outputhub.set("hello")
 
