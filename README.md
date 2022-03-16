@@ -9,7 +9,7 @@ import datetime
 import logging
 import os
 
-app = func.FunctionApp(auth_level=AuthLevel.ANONYMOUS)
+app = func.FunctionApp(auth_level=func.AuthLevel.ANONYMOUS)
 
 @app.function_name(name="HttpTrigger1")
 @app.route(route="hello") # HTTP Trigger
