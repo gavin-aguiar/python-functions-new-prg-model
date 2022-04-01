@@ -17,6 +17,7 @@ RUN BUILD_NUMBER=$(echo ${HOST_VERSION} | cut -d'.' -f 3) && \
     mv /azure-functions-host/workers /workers && mkdir /azure-functions-host/workers && \
     rm -rf /root/.local /root/.nuget /src
 
+
 RUN apt-get update && \
     apt-get install -y gnupg wget unzip && \
     EXTENSION_BUNDLE_VERSION_V2=2.8.5 && \
@@ -80,41 +81,44 @@ RUN apt-get update && \
     # Fix from https://github.com/GoogleCloudPlatform/google-cloud-dotnet-powerpack/issues/22#issuecomment-729895157
     #apt-get install -y libc-dev
 
-# This is current not working with the .NET 6.0 image based on bullseye. Tracking here: https://github.com/Azure/azure-functions-docker/issues/451
-# Chrome headless dependencies
-# https://github.com/puppeteer/puppeteer/blob/main/docs/troubleshooting.md#chrome-headless-doesnt-launch-on-unix
-#RUN apt-get install -y xvfb gconf-service libasound2 libatk1.0-0 libc6 libcairo2 libcups2 \
-#    libdbus-1-3 libexpat1 libfontconfig1 libgbm1 libgcc1 libgconf-2-4 libgdk-pixbuf2.0-0 libglib2.0-0 \
-#    libgtk-3-0 libnspr4 libpango-1.0-0 libpangocairo-1.0-0 libstdc++6 libx11-6 libx11-xcb1 libxcb1 \
-#    libxcomposite1 libxcursor1 libxdamage1 libxext6 libxfixes3 libxi6 libxrandr2 libxrender1 libxss1 \
-#    libxtst6 ca-certificates fonts-liberation libappindicator1 libnss3 lsb-release xdg-utils wget
-
 COPY --from=runtime-image ["/azure-functions-host", "/azure-functions-host"]
 COPY --from=runtime-image [ "/workers/python/3.9/LINUX", "/azure-functions-host/workers/python/3.9/LINUX" ]
 COPY --from=runtime-image [ "/workers/python/worker.config.json", "/azure-functions-host/workers/python" ]
 COPY --from=runtime-image [ "/FuncExtensionBundles", "/FuncExtensionBundles" ]
+
 
 ENV FUNCTIONS_WORKER_RUNTIME_VERSION=3.9
 
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true \ 
     AzureWebJobsFeatureFlags=EnableWorkerIndexing \
-    AZURE_FUNCTIONS_ENVIRONMENT=Development \
-    AzureWebJobsStorage='<storage account connection string>'
+    AZURE_FUNCTIONS_ENVIRONMENT=Development 
 
 
-# Mounting local machines azure-functions-python-worker and azure-functions-python-library onto it
-RUN rm -rf /azure-functions-host/workers/python/3.9/LINUX/X64/azure_functions_worker
-RUN rm -rf /azure-functions-host/workers/python/3.9/LINUX/X64/azure/functions
-RUN rm -rf /azure-functions-host/workers/python/worker.config.json
+RUN apt-get update && \
+apt-get install -y git
+
+
+RUN apt-get update && \
+    apt-get install -y  python3 && \
+    apt-get install -y python3-pip
+
+RUN cd /home && \
+    git clone --branch gaaguiar/new-prg-model https://github.com/Azure/azure-functions-python-worker.git && \
+    cd /home/azure-functions-python-worker && \
+    python3 -m pip install . && \
+    python3 setup.py build && \
+    rm -r /azure-functions-host/workers/python/3.9/LINUX/X64/azure_functions_worker && \
+    cp -r /home/azure-functions-python-worker/azure_functions_worker /azure-functions-host/workers/python/3.9/LINUX/X64/  
+
+RUN cd /home && \
+    git clone  https://github.com/Azure/azure-functions-python-library.git && \
+    cd /home/azure-functions-python-library && \
+    rm -rf /azure-functions-host/workers/python/3.9/LINUX/X64/azure/functions  && \
+    cp -r /home/azure-functions-python-library/azure/functions /azure-functions-host/workers/python/3.9/LINUX/X64/azure 
 
 
 COPY worker.config.json /azure-functions-host/workers/python/worker.config.json
-
-# Use the following command to run the docker image with customizible worker and library
-VOLUME ["/azure-functions-host/workers/python/3.9/LINUX/X64/azure_functions_worker"]
-VOLUME ["/azure-functions-host/workers/python/3.9/LINUX/X64/azure/functions"]
-
 
 COPY requirements.txt /
 RUN pip install -r /requirements.txt
