@@ -1,3 +1,6 @@
+## New programming model examples.
+
+```python
 import json
 import azure.functions as func
 import datetime
@@ -229,3 +232,4 @@ def main(eventGridEvent: func.EventGridEvent,
 #         "lastname": fake_user.last_name(),
 #     }
 # app = func.FunctionApp(asgi_app=fast_app, auth_level=func.AuthLevel.ANONYMOUS)
+```
