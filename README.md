@@ -7,7 +7,7 @@ import datetime
 import logging
 import os
 
-app = func.FunctionApp(http_auth_level=func.AuthLevel.http)
+app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
 
 @app.function_name(name="timertest")
