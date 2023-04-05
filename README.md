@@ -5,7 +5,6 @@ import json
 import azure.functions as func
 import datetime
 import logging
-import os
 
 app = func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 
@@ -23,37 +22,34 @@ def timer_function(dummy: func.TimerRequest) -> None:
     logging.info('Python timer trigger function ran at %s', utc_timestamp)
 
 
-@app.function_name(name="EventHubFunc")
 @app.event_hub_message_trigger(arg_name="myhub", event_hub_name="inputhub",
                                connection="EHConnectionString")  # Eventhub trigger
-@app.write_event_hub_message(arg_name="outputhub", event_hub_name="outputhub",
+@app.event_hub_output(arg_name="outputhub", event_hub_name="outputhub",
                              connection="EHConnectionString")  # Eventhub output binding
-def eventhub_trigger(myhub: func.EventHubEvent, outputhub: func.Out[str]):
+def event_hub_message_trigger(myhub: func.EventHubEvent, outputhub: func.Out[str]):
     outputhub.set("hello")
 
 
-@app.function_name(name="QueueFunc")
 @app.queue_trigger(arg_name="msg", queue_name="inputqueue",
                    connection="storageAccountConnectionString")  # Queue trigger
-@app.write_queue(arg_name="outputQueueItem", queue_name="outqueue",
+@app.queue_output(arg_name="outputQueueItem", queue_name="outqueue",
                  connection="storageAccountConnectionString")  # Queue output binding
-def test_function(msg: func.QueueMessage,
+def queue_trigger(msg: func.QueueMessage,
                   outputQueueItem: func.Out[str]) -> None:
     logging.info('Python queue trigger function processed a queue item: %s',
                  msg.get_body().decode('utf-8'))
     outputQueueItem.set('hello')
 
 
-@app.function_name(name="ServiceBusTopicFunc")
 @app.service_bus_topic_trigger(arg_name="serbustopictrigger",
                                topic_name="inputtopic",
                                connection="topicConnectionString",
                                subscription_name="testsub")  # service bus topic trigger
-@app.write_service_bus_topic(arg_name="serbustopicbinding",
+@app.service_bus_topic_output(arg_name="serbustopicbinding",
                              connection="outputtopicConnectionString",
                              topic_name="outputtopic",
                              subscription_name="testsub")  # service bus topic output binding
-def main(serbustopictrigger: func.ServiceBusMessage,
+def service_bus_topic_trigger(serbustopictrigger: func.ServiceBusMessage,
          serbustopicbinding: func.Out[str]) -> None:
     logging.info('Python ServiceBus queue trigger processed message.')
 
@@ -75,14 +71,13 @@ def main(serbustopictrigger: func.ServiceBusMessage,
     serbustopicbinding.set("topic works!!")
 
 
-@app.function_name(name="ServiceBusQueueFunc")
 @app.service_bus_queue_trigger(arg_name="serbustopictrigger",
                                queue_name="inputqueue",
                                connection="queueConnectionString")  # service bus queue trigger
-@app.write_service_bus_queue(arg_name="serbustopicbinding",
+@app.service_bus_queue_output(arg_name="serbustopicbinding",
                              connection="queueConnectionString",
                              queue_name="outputqueue")  # service bus queue output binding
-def main(serbustopictrigger: func.ServiceBusMessage,
+def service_bus_queue_trigger(serbustopictrigger: func.ServiceBusMessage,
          serbustopicbinding: func.Out[str]) -> None:
     logging.info('Python ServiceBus queue trigger processed message.')
 
@@ -104,19 +99,18 @@ def main(serbustopictrigger: func.ServiceBusMessage,
     serbustopicbinding.set("queue works!!")
 
 
-@app.function_name(name="Cosmos1")
 @app.cosmos_db_trigger(arg_name="triggerDocs", database_name="billdb",
                        collection_name="billcollection",
                        connection_string_setting="CosmosDBConnectionString",
                        lease_collection_name="leasesstuff",
                        create_lease_collection_if_not_exists="true")  # Cosmos DB Trigger
-@app.write_cosmos_db_documents(arg_name="outDoc", database_name="billdb",
+@app.cosmos_db_output(arg_name="outDoc", database_name="billdb",
                                collection_name="outColl",
                                connection_string_setting="CosmosDBConnectionString")  # Cosmos DB input binding
-@app.read_cosmos_db_documents(arg_name="inDocs", database_name="billdb",
+@app.cosmos_db_input(arg_name="inDocs", database_name="billdb",
                               collection_name="incoll",
                               connection_string_setting="CosmosDBConnectionString")  # Cosmos DB output binding
-def main(triggerDocs: func.DocumentList, inDocs: func.DocumentList,
+def cosmos_db_trigger(triggerDocs: func.DocumentList, inDocs: func.DocumentList,
          outDoc: func.Out[func.Document]) -> str:
     if triggerDocs:
         triggerDoc = triggerDocs[0]
@@ -125,14 +119,13 @@ def main(triggerDocs: func.DocumentList, inDocs: func.DocumentList,
         outDoc.set(triggerDoc)
 
 
-@app.function_name(name="BlobFunc")
 @app.blob_trigger(arg_name="triggerBlob", path="input-container/{name}",
                   connection="AzureWebJobsStorage")
-@app.write_blob(arg_name="outputBlob", path="output-container/{name}",
+@app.blob_output(arg_name="outputBlob", path="output-container/{name}",
                 connection="AzureWebJobsStorage")
-@app.read_blob(arg_name="readBlob", path="output-container/{name}",
+@app.blob_input(arg_name="readBlob", path="output-container/{name}",
                connection="AzureWebJobsStorage")
-def test_function(triggerBlob: func.InputStream, readBlob: func.InputStream,
+def blob_trigger(triggerBlob: func.InputStream, readBlob: func.InputStream,
                   outputBlob: func.Out[str]) -> None:
     logging.info(f"Blob trigger executed!")
     logging.info(f"Blob Name: {triggerBlob.name} ({triggerBlob.length}) bytes")
@@ -141,13 +134,12 @@ def test_function(triggerBlob: func.InputStream, readBlob: func.InputStream,
     logging.info(f"Output blob: {readBlob.read()}")
 
 
-@app.function_name(name="eventGridTrigger")
 @app.event_grid_trigger(arg_name="eventGridEvent")
-@app.write_event_grid(
+@app.event_grid_output(
     arg_name="outputEvent",
     topic_endpoint_uri="MyEventGridTopicUriSetting",
     topic_key_setting="MyEventGridTopicKeySetting")
-def main(eventGridEvent: func.EventGridEvent,
+def event_grid_trigger(eventGridEvent: func.EventGridEvent,
          outputEvent: func.Out[func.EventGridOutputEvent]) -> None:
     logging.info("eventGridEvent: ", eventGridEvent)
 
